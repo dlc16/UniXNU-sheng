@@ -50,7 +50,22 @@ jobs:
         with:
           repository: UniXNU/uefi-sheng
           path: uefi-sheng
-          submodules: recursive
+          submodules: recursive      
+      - name: fix upstream mesa patch header
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          p = pathlib.Path('UniXNU/patches/mesa/turnip-frame-diagnostics.patch')
+          lines = p.read_text().splitlines(keepends=True)
+          out = []
+          for i, line in enumerate(lines):
+              out.append(line)
+              if line.startswith('diff --git ') and i + 1 < len(lines) and lines[i + 1].startswith('--- /dev/null'):
+                  if 'new file mode' not in ''.join(lines[i + 1:i + 3]):
+                      out.append('new file mode 100644\n')
+          p.write_text(''.join(out))
+          print('patch header fixed')
+          PY      
       - name: tools
         run: |
           brew install dtc llvm lld cmake mtools ninja glslang shaderc spirv-tools bison pkgconf rustup blacktop/tap/ipsw
